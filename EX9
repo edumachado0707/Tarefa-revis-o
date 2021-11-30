@@ -1,0 +1,160 @@
+USE ex9
+
+Pede-se:	
+1) Consultar nome, valor unitario, nome da editora e nome do autor dos livros do estoque que foram vendidos. 
+Nao podem haver repetiçõe.
+
+select distinct e.nome as livro, e.valor, edi.nome as editora, a.nome as autor
+from estoque e, editora edi, autor a, compra c 
+where c.codEstoque = e.codigo 
+and e.codAutor = a.codigo 
+and e.codEditora = edi.codigo 
+
+
+2) Consultar nome do livro, quantidade comprada e valor de compra da compra 15051
+
+select c.codigo, e.nome as livro, c.qtdComprada as qtd, c.valor
+from estoque e, compra c 
+where c.codEstoque = e.codigo 
+and c.codigo  = 15051
+
+3) Consultar Nome do livro e site da editora dos livros da Makron books 
+(Caso o site tenha mais de 10 d�gitos, remover o www.).	
+select e.nome as livro, 
+case
+	when len(edi.site) > 10 then
+		replace(edi.site, 'www.', '')
+end as site
+from editora edi, estoque e
+where e.codEditora = edi.codigo 
+and edi.nome = 'Makron books'
+
+4) Consultar nome do livro e Breve Biografia do David Halliday	
+select a.nome as autor, e.nome as livro, a.biografia
+from estoque e, autor a 
+where e.codAutor = a.codigo
+and a.nome = 'David Halliday'
+
+5) Consultar codigo de compra e quantidade comprada do livro Sistemas Operacionais Modernos
+select c.codigo, c.qtdComprada, e.nome as livro
+from compra c, estoque e 
+where c.codEstoque = e.codigo 
+and e.nome = 'Sistemas Operacionais Modernos'
+
+
+6) Consultar quais livros nao foram vendidos	
+select e.nome
+from estoque e
+where e.codigo not in
+	(select c.codEstoque from compra c)
+
+
+
+7) Consultar quais livros foram vendidos e n�o est�o cadastrados	
+select e.nome
+from estoque e
+where e.codigo right in
+	(select c.codEstoque from compra c)
+
+
+
+
+8) Consultar Nome e site da editora que nao tem Livros no estoque (Caso o site tenha mais de 10 d�gitos, remover o www.)
+
+select edi.nome,
+case
+	when len(edi.site) > 10 then
+		replace(edi.site, 'www.', '')
+end as site
+from editora edi
+where edi.codigo not in
+(select e.codEditora from estoque e)
+
+9) Consultar Nome e biografia do autor que n�o tem Livros no estoque 
+(Caso a biografia inicie com Doutorado, substituir por Ph.D.)	
+
+select a.nome as autor, 
+	case
+		when a.biografia like '%Doutorado%' then
+			replace(a.biografia, 'Doutorado', 'Ph.D.')
+		else
+			a.biografia 
+	end as biografia 
+from autor a
+where a.codigo not in
+(select e.codAutor from estoque e)
+
+10) Consultar o nome do Autor, e o maior valor de Livro no estoque. Ordenar por valor descendente	
+
+select a.nome, e.valor
+from autor a, estoque e
+where e.codAutor = a.codigo 
+order by e.valor desc
+
+11) Consultar o c�digo da compra, o total de livros comprados e a soma dos valores gastos. 
+Ordenar por C�digo da Compra ascendente.	
+
+select c.codigo, sum(c.qtdComprada) as qtd, sum(c.valor) as valor_total
+from compra c 
+group by c.codigo 
+
+SELECT * FROM compra c 
+
+12) Consultar o nome da editora e a media de precos dos livros em estoque.
+Ordenar pela Media de Valores ascendente.	
+
+select edi.nome as editora, convert(decimal(7,2), avg(e.valor)) as valor_medio
+from editora edi, estoque e 
+where e.codEditora = edi.codigo 
+group by edi.nome
+
+
+13) Consultar o nome do Livro, a quantidade em estoque o nome da editora, o site da editora (Caso o site tenha mais de 10 d�gitos, remover o www.), criar uma coluna status onde:	
+	Caso tenha menos de 5 livros em estoque, escrever Produto em Ponto de Pedido
+	Caso tenha entre 5 e 10 livros em estoque, escrever Produto Acabando
+	Caso tenha mais de 10 livros em estoque, escrever Estoque Suficiente
+	A Ordena��o deve ser por Quantidade ascendente
+
+select e.nome as livro, e.quantidade, edi.nome as editora, 
+case
+	when len(edi.site) > 10 then
+		replace(edi.site, 'www.', '')
+end as site,
+case
+	when e.quantidade < 5 then
+		'produto em ponto de pedido'
+	when e.quantidade >= 5 and e.quantidade <= 10 then
+		'produto acabando'
+	else
+		'estoque suficiente'
+end as situacao
+from estoque e, editora edi
+where e.codEditora = edi.codigo 
+	
+
+14) Para montar um relat�rio, � necess�rio montar uma consulta com a seguinte sa�da: 
+C�digo do Livro, Nome do Livro, Nome do Autor, Info Editora (Nome da Editora + Site) de todos os livros	
+	S� pode concatenar sites que n�o s�o nulos
+	
+select e.codigo, e.nome as livro, a.nome as autor, (edi.nome + ' - ' + isnull(edi.site, '')) as info_editora
+from estoque e, editora edi, autor a 
+where e.codEditora = edi.codigo 
+and e.codAutor = a.codigo 
+
+	
+15) Consultar Codigo da compra, quantos dias da compra at� hoje e quantos meses da compra at� hoje	
+select DISTINCT c.codigo, 
+datediff(day, c.dataCompra, getdate()) as dias, 
+datediff(month, c.dataCompra, getdate()) as meses
+from compra c 
+
+select * from compra c 
+
+16) Consultar o codigo da compra e a soma dos valores gastos das compras que somam mais de 200.00	
+
+select c.codigo, sum(c.valor) as valorTotal
+from compra c
+group by c.codigo 
+having sum(c.valor) > 200
+
+
